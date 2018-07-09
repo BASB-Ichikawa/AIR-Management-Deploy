@@ -220,7 +220,6 @@ exports.create = async (house) => {
         return new Promise(resolve => {
             connection.query(sql, 
                 (error, results) => {
-                    console.log(error)
                     if (error) { 
                         connection.rollback(() => {
                             throw error;

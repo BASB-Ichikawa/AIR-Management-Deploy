@@ -198,7 +198,7 @@ app.post('/create/house', (req, res) => {
         const prefectures = req.body.prefectures.split(',');
         for(let i=0; i < prefectures.length; i++) {
             if(prefectures[i].toLowerCase() === "true") {
-                prefecture.update(i+1, req.body.houseId);
+                prefecture.update(i+1, houseId);
             }
         }    
 
