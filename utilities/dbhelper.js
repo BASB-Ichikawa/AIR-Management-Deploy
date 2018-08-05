@@ -1,23 +1,18 @@
 var mysql = require('mysql');
+var constants = require('../utilities/constants');
 
-exports.getConnection = function () {
+const getConnection = exports.getConnection = function () {
     return mysql.createConnection({
-        host: 'air-dev2.mysql.database.azure.com',
-        user: 'Ichikawa@air-dev2',
-        password: 'Password1!',
-        database: 'air_db'
+        host: constants.DB_URL,
+        user: constants.DB_USER,
+        password: constants.DB_PASS,
+        database: constants.DB_NAME
     });
 }
 
 exports.execute = function(sql) {
-    let connection = mysql.createConnection({
-        host: 'air-dev2.mysql.database.azure.com',
-        user: 'Ichikawa@air-dev2',
-        password: 'Password1!',
-        database: 'air_db'
-    });
-
     return new Promise(resolve => {
+        const connection = getConnection();
         connection.query(sql, 
             (error, results) => {
                 if (error) { 

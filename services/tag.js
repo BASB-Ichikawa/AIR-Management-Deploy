@@ -1,5 +1,5 @@
 var mysql = require('mysql');
-var dbhelper = require('../utilities/dbhelper');
+var dbHelper = require('../utilities/dbhelper');
 
 exports.exist = async (tagId, houseId) => {
 
@@ -11,10 +11,9 @@ exports.exist = async (tagId, houseId) => {
     ]
                 
     var sql = mysql.format(query, params);
-    //console.log(sql);
 
     function execute() {
-        let connection = dbhelper.getConnection();
+        let connection = dbHelper.getConnection();
 
         return new Promise(resolve => {
             connection.query(sql, 
@@ -44,21 +43,25 @@ exports.exist = async (tagId, houseId) => {
     return await execute();
 };
 
-exports.find = async (houseid) => {
-    function execute() {
-        let connection = dbhelper.getConnection();
+exports.findStar = async (houseid) => {
+    const query = 'SELECT * FROM house_tags_map JOIN house_tags on house_tags_map.tag_id = house_tags.tag_id WHERE house_id = ? AND house_tags.input_type = 1 ORDER BY house_tags_map.tag_id;'
+    let sql = mysql.format(query, [houseid]);
 
-        return new Promise(resolve => {
-            const query = 'SELECT * FROM house_tags_map WHERE house_id = ? ORDER BY tag_id;';
+    return await dbHelper.execute(sql);
+};
 
-            connection.query(query, [houseid], (error, results) => {
-                resolve(results);
-                connection.end();
-            });
-        });
-    };
+exports.findDDL = async (houseid) => {
+    const query = 'SELECT house_tags_map.tag_id, tag_score FROM house_tags_map JOIN house_tags on house_tags_map.tag_id = house_tags.tag_id WHERE house_id = ? AND house_tags.input_type = 2 ORDER BY house_tags_map.tag_id;'
+    let sql = mysql.format(query, [houseid]);
 
-    return await execute();
+    return await dbHelper.execute(sql);
+};
+
+exports.findRadio = async (houseid) => {
+    const query = 'SELECT house_tags_map.tag_id, tag_score FROM house_tags_map JOIN house_tags on house_tags_map.tag_id = house_tags.tag_id WHERE house_id = ? AND house_tags.input_type = 3 ORDER BY house_tags_map.tag_id;'
+    let sql = mysql.format(query, [houseid]);
+
+    return await dbHelper.execute(sql);
 };
 
 exports.insert = async (star, tagId, houseId) => {
@@ -72,37 +75,8 @@ exports.insert = async (star, tagId, houseId) => {
     ]
                 
     var sql = mysql.format(query, params);
-    //console.log(sql);
 
-    function execute() {
-        let connection = dbhelper.getConnection();
-
-        return new Promise(resolve => {
-            connection.query(sql, 
-                (error, results) => {
-                    if (error) { 
-                        connection.rollback(() => {
-                            throw error;
-                        });
-                    }  
-                    
-                    connection.commit((error2) => {
-                        if (error2) { 
-                            connection.rollback(() => {
-                            throw error2;
-                        });
-                    }
-                });
-
-                resolve(results);
-                connection.end();
-            });
-
-            connection.commit();
-        });
-    };
-
-    return await execute();
+    return await dbHelper.execute(sql);
 };
 
 
@@ -117,36 +91,7 @@ exports.edit = async (star, tagId, houseId) => {
     ]
                 
     var sql = mysql.format(query, params);
-    //console.log(sql);
 
-    function execute() {
-        let connection = dbhelper.getConnection();
-
-        return new Promise(resolve => {
-            connection.query(sql, 
-                (error, results) => {
-                    if (error) { 
-                        connection.rollback(() => {
-                            throw error;
-                        });
-                    }  
-                    
-                    connection.commit((error2) => {
-                        if (error2) { 
-                            connection.rollback(() => {
-                            throw error2;
-                        });
-                    }
-                });
-
-                resolve(results);
-                connection.end();
-            });
-
-            connection.commit();
-        });
-    };
-
-    return await execute();
+    return await dbHelper.execute(sql);
 };
 

@@ -5,16 +5,33 @@ var maker = require('./services/maker');
 var common = require('./services/common');
 var tags = require('./services/tag');
 var image = require('./services/image');
+var blob = require('./services/blob');
 var auth = require('./services/auth');
 var prefecture = require('./services/prefecture');
 var dashboard = require('./services/dashboard');
+var guard = require('./services/guard');
 var multer = require('multer');
 var upload = multer({ dest: './uploads/' });
 var passport = require('passport');
+var validator = require('express-validator');
 
 var app = express();
 
-app.use(express.static('public'));
+app.use(validator());
+
+var options = {
+    dotfiles: 'ignore',
+    etag: false,
+    index: false,
+    maxAge: '1d',
+    redirect: false,
+    setHeaders: function (res, path, stat) {
+        res.set('x-timestamp', Date.now())
+        res.set('Access-Control-Allow-Origin', 'http://localhost:3001');
+    }
+}
+
+app.use(express.static('public', options));
 
 app.use(bodyParser.urlencoded({
     extended: true
@@ -31,17 +48,19 @@ app.use((req, res, next) => {
         res.header('Access-Control-Allow-Origin', 'https://air-dev2-demo.azurewebsites.net');
     }
 
+    
     res.header('Access-Control-Allow-Credentials', 'true'),
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     next();
 });
 
+
 app.post('/login/user', passport.authenticate('local'), (req, res) => {
-    res.json({ result: 'success' });
+    res.json({ status: 'success' });
 });
 
 app.post('/auth/check', auth.isAuthenticated, (req, res) => {
-    res.json({ result: 'success' });
+    res.json({ status: 'success' });
 });
 
 
@@ -63,7 +82,7 @@ app.post('/find/prefectures', (req, res) => {
     });
 });
 
-app.post('/find/planimage', (req, res) => {
+app.post('/find/floorimage', (req, res) => {
     image.findPlan(req.body.houseid).then((result) => {
         res.json(result);
     });
@@ -82,16 +101,48 @@ app.post('/find/path', (req, res) => {
 });
 
 app.post('/edit/house', (req, res) => {
+    const errors = guard.validateHouse(req);
+    if (errors) {
+        var mappedErrors = req.validationErrors(true);
+        res.json({ result: 'error', errors: mappedErrors});	
+    } 
+
     house.edit(req.body).then((result) => {
-        const stars = req.body.stars.split(',');
         const tagIds = req.body.tagIds.split(',');
+        const stars = req.body.stars.split(',');
         for(let i=0; i < stars.length; i++) {
-            // タグ更新
+            // 星型タグ更新
             tags.exist(tagIds[i], req.body.houseId).then((result2) => {
                 if(!result2) {
                     tags.insert(stars[i], tagIds[i], req.body.houseId);
                 } else {
                     tags.edit(stars[i], tagIds[i], req.body.houseId);
+                }
+            });
+        }
+        
+        const tagDdlIds = req.body.tagDdlIds.split(',');
+        const tagDdlValues = req.body.tagDdlValues.split(',');
+        for(let i=0; i < tagDdlValues.length; i++) {
+            // DDL型タグ更新
+            tags.exist(tagDdlIds[i], req.body.houseId).then((result2) => {
+                if(!result2) {
+                    tags.insert(tagDdlValues[i], tagDdlIds[i], req.body.houseId);
+                } else {
+                    tags.edit(tagDdlValues[i], tagDdlIds[i], req.body.houseId);
+                }
+            });
+        }
+
+        const tagRadioIds = req.body.tagRadioIds.split(',');
+        const tagRadioValues = req.body.tagRadioValues.split(',');
+        for(let i=0; i < tagRadioValues.length; i++) {
+            // ラジオ型タグ更新
+            tags.exist(tagRadioIds[i], req.body.houseId).then((result2) => {
+                if(!result2) {
+                    tags.insert(tagRadioValues[i], tagRadioIds[i], req.body.houseId);
+                } else {
+                    tags.edit(tagRadioValues[i], tagRadioIds[i], req.body.houseId);
                 }
             });
         }
@@ -122,13 +173,13 @@ app.post('/edit/cgmodel', upload.fields([ { name: 'file' } ]), (req, res) => {
         if(count === 0) {
             house.uploadByCreate(file, type).then((result) => {
                 house.uploadedByCreate(houseId, newImage, type).then((result2) => {
-                    res.json({ result: 'success' });
+                    res.json({ status: 'success' });
                 });
             });
         } else {
             house.uploadByEdit(file, oldData, type).then((result) => {
                 house.uploadedByEdit(houseId, oldData, newImage, type).then((result2) => {
-                    res.json({ result: 'success' });
+                    res.json({ status: 'success' });
                 });
             });
         }
@@ -146,37 +197,37 @@ app.post('/edit/houseimage', upload.fields([ { name: 'file' } ]), (req, res) => 
         if(count === 0) {
             house.uploadByCreate(file, type).then((result) => {
                 house.uploadedByCreate(houseId, newImage, type).then((result2) => {
-                    res.json({ result: 'success' });
+                    res.json({ status: 'success' });
                 });
             });
         } else {
             house.uploadByEdit(file, oldData, type).then((result) => {
                 house.uploadedByEdit(houseId, oldData, newImage, type).then((result2) => {
-                    res.json({ result: 'success' });
+                    res.json({ status: 'success' });
                 });
             });
         }
     });
 });
 
-app.post('/edit/planimage', upload.fields([ { name: 'file' } ]), (req, res) => {
+app.post('/edit/floorimage', upload.fields([ { name: 'file' } ]), (req, res) => {
     const file = req.files.file[0];
     const houseId = parseInt(req.query.houseid);
     const oldData = req.body.image;
     const newImage = file.filename;
-    const type = 'planImage';
+    const type = 'floorImage';
     
     image.exist(houseId, oldData, type).then((count) => {
         if(count === 0) {
             house.uploadByCreate(file, type).then((result) => {
                 house.uploadedByCreate(houseId, newImage, type).then((result2) => {
-                    res.json({ result: 'success' });
+                    res.json({ status: 'success' });
                 });
             });
         } else {
             house.uploadByEdit(file, oldData, type).then((result) => {
                 house.uploadedByEdit(houseId, oldData, newImage, type).then((result2) => {
-                    res.json({ result: 'success' });
+                    res.json({ status: 'success' });
                 });
             });
         }
@@ -187,11 +238,29 @@ app.post('/edit/planimage', upload.fields([ { name: 'file' } ]), (req, res) => {
 
 
 app.post('/create/house', (req, res) => {
+    const errors = guard.validateHouse(req);
+    if (errors) {
+        var mappedErrors = req.validationErrors(true);
+        return res.json({ status: 'error', errors: mappedErrors});	
+    } 
+
     house.create(req.body).then((houseId) => {
-        const stars = req.body.stars.split(',');
         const tagIds = req.body.tagIds.split(',');
+        const stars = req.body.stars.split(',');
         for(let i=0; i < stars.length; i++) {
             tags.insert(stars[i], tagIds[i], houseId);
+        }
+
+        const tagDdlIds = req.body.tagDdlIds.split(',');
+        const tagDdlValues = req.body.tagDdlValues.split(',');
+        for(let i=0; i < tagDdlIds.length; i++) {
+            tags.insert(tagDdlValues[i], tagDdlIds[i], houseId);
+        }
+        
+        const tagRadioIds = req.body.tagRadioIds.split(',');
+        const tagRadioValues = req.body.tagRadioValues.split(',');
+        for(let i=0; i < tagRadioIds.length; i++) {
+            tags.insert(tagRadioValues[i], tagRadioIds[i], houseId);
         }
 
         // 購入可能エリア更新
@@ -202,7 +271,7 @@ app.post('/create/house', (req, res) => {
             }
         }    
 
-        res.json(houseId);
+        res.json({ status: 'success', result: houseId});	
     });
 });
 
@@ -213,7 +282,7 @@ app.post('/create/cgmodel', upload.fields([ { name: 'file' } ]), (req, res) => {
     house.uploadByCreate(file, 'cgModel').then((result) => {
         // house_3d_dataを更新
         house.uploadedByCreate(houseId, result, 'cgModel').then((result2) => {
-            res.json({ result: 'success' });
+            res.json({ status: 'success' });
         });
     });
 });
@@ -224,18 +293,18 @@ app.post('/create/houseimage', upload.fields([ { name: 'file' } ]), (req, res) =
     
     house.uploadByCreate(file, 'houseImage').then((result) => {
         house.uploadedByCreate(houseId, result, 'houseImage').then((result2) => {
-            res.json({ result: 'success' });
+            res.json({ status: 'success' });
         });
     });
 });
 
-app.post('/create/planimage', upload.fields([ { name: 'file' } ]), (req, res) => {
+app.post('/create/floorimage', upload.fields([ { name: 'file' } ]), (req, res) => {
     const file = req.files.file[0];
     const houseId = parseInt(req.query.houseid);
     
-    house.uploadByCreate(file, 'planImage').then((result) => {
-        house.uploadedByCreate(houseId, result, 'planImage').then((result2) => {
-            res.json({ result: 'success' });
+    house.uploadByCreate(file, 'floorImage').then((result) => {
+        house.uploadedByCreate(houseId, result, 'floorImage').then((result2) => {
+            res.json({ status: 'success' });
         });
     });
 });
@@ -261,12 +330,35 @@ app.post('/search/tags', (req, res) => {
     });
 });
 
-app.post('/find/tags', (req, res) => {
-    tags.find(req.body.houseid).then((result) => {
+app.post('/search/ddls', (req, res) => {
+    common.searchDDLs().then((result) => {
         res.json(result);
     });
 });
 
+app.post('/search/radios', (req, res) => {
+    common.searchRadios().then((result) => {
+        res.json(result);
+    });
+});
+
+app.post('/find/stars', (req, res) => {
+    tags.findStar(req.body.houseid).then((result) => {
+        res.json(result);
+    });
+});
+
+app.post('/find/ddls', (req, res) => {
+    tags.findDDL(req.body.houseid).then((result) => {
+        res.json(result);
+    });
+});
+
+app.post('/find/radios', (req, res) => {
+    tags.findRadio(req.body.houseid).then((result) => {
+        res.json(result);
+    });
+});
 
 app.post('/calculate/housebyweek', (req, res) => {
     dashboard.getCreatedHouseNumByWeek().then((result) => {
@@ -278,6 +370,47 @@ app.post('/calculate/housebymonth', (req, res) => {
     dashboard.getCreatedHouseNumByMonth().then((result) => {
         res.json(result);
     });
+});
+
+app.post('/delete/house', (req, res) => {
+    const houseId = parseInt(req.body.houseid);
+
+    house.findPath(houseId).then((result) => {
+        const house_3d_data = result[0].house_3d_data;
+        blob.delete(house_3d_data, 'cgModel');
+    });
+
+    image.findHouse(houseId).then((result) => {
+        const houseImages = result;
+        houseImages.map((image) => {
+            blob.delete(image.house_image, 'houseImage');
+        });
+    });
+
+    image.findPlan(houseId).then((result) => {
+        const floorImages = result;
+        floorImages.map((image) => {
+            blob.delete(image.floor_plan_image, 'floorImage');
+        });
+    });
+
+    house.delete(houseId);
+
+    res.json({ status: 'success' });
+});
+
+
+app.post('/find/zip', (req, res) => {
+    const houseId = parseInt(req.body.houseid);
+
+    house.findPath(houseId).then((result) => {
+        const zipName = result[0].house_3d_data;
+        blob.findZip(zipName).then((result) => {
+            res.json({result: result});
+        });
+    });
+    
+    
 });
 
 

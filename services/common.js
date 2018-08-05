@@ -1,17 +1,23 @@
-var dbhelper = require('../utilities/dbhelper');
+var mysql = require('mysql');
+var dbHelper = require('../utilities/dbhelper');
 
 exports.searchTags = async (name) => {
-    function execute() {
-        let connection = dbhelper.getConnection();
-        return new Promise(resolve => {
-            const query = 'SELECT * FROM house_tags ORDER BY tag_id;';
+    const query = 'SELECT * FROM house_tags WHERE input_type = 1 ORDER BY tag_id;';
+    var sql = mysql.format(query, []);
 
-            connection.query(query, [], (error, results) => {
-                resolve(results);
-                connection.end();
-            });
-        });
-    };
+    return await dbHelper.execute(sql);
+};
 
-    return await execute();
+exports.searchDDLs = async (name) => {
+    const query = 'SELECT * FROM house_tags WHERE input_type = 2 ORDER BY tag_id;';
+    var sql = mysql.format(query, []);
+
+    return await dbHelper.execute(sql);
+};
+
+exports.searchRadios = async (name) => {
+    const query = 'SELECT * FROM house_tags WHERE input_type = 3 ORDER BY tag_id;';
+    var sql = mysql.format(query, []);
+
+    return await dbHelper.execute(sql);
 };

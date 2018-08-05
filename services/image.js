@@ -1,5 +1,5 @@
 var mysql = require('mysql');
-var dbhelper = require('../utilities/dbhelper');
+var dbHelper = require('../utilities/dbhelper');
 
 exports.findPlan = async (houseId) => {
 
@@ -10,9 +10,8 @@ exports.findPlan = async (houseId) => {
     ]
                 
     var sql = mysql.format(query, params);
-    //console.log(sql);
 
-    return await dbhelper.execute(sql);
+    return await dbHelper.execute(sql);
 };
 
 exports.findHouse = async (houseId) => {
@@ -24,9 +23,8 @@ exports.findHouse = async (houseId) => {
     ]
                 
     var sql = mysql.format(query, params);
-    //console.log(sql);
 
-    return await dbhelper.execute(sql);
+    return await dbHelper.execute(sql);
 };
 
 exports.exist = async (houseId, oldData, type) => {
@@ -42,17 +40,16 @@ exports.exist = async (houseId, oldData, type) => {
             query = 'SELECT COUNT(*) AS Count FROM house_image WHERE house_id = ? AND house_image = ?;';
             params = [houseId, oldData];
             break;
-        case 'planImage':
+        case 'floorImage':
             query = 'SELECT COUNT(*) AS Count FROM floor_plan_image WHERE house_id = ? AND floor_plan_image = ?;';
             params = [houseId, oldData];
             break;
     }
                 
     var sql = mysql.format(query, params);
-    //console.log(sql);
 
     function execute() {
-        let connection = dbhelper.getConnection();
+        let connection = dbHelper.getConnection();
 
         return new Promise(resolve => {
             connection.query(sql, 

@@ -10,7 +10,6 @@ exports.find = async (houseId) => {
     ]
                 
     let sql = mysql.format(query, params);
-    //console.log(sql);
 
     return await dbHelper.execute(sql);
 };

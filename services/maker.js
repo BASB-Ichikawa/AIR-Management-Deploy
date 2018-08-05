@@ -1,49 +1,23 @@
-var dbhelper = require('../utilities/dbhelper');
+var mysql = require('mysql');
+var dbHelper = require('../utilities/dbhelper');
 
 exports.search = async (name) => {
-    function execute(name) {
-        let connection = dbhelper.getConnection();
-        return new Promise(resolve => {
-            const query = 'SELECT maker_id, maker_name FROM house_makers WHERE maker_name LIKE ? AND house_makers.is_deleted <> 1';
+    const query = 'SELECT maker_id, maker_name FROM house_makers WHERE maker_name LIKE ? AND house_makers.is_deleted = 0';
+    let sql = mysql.format(query, ['%' + name + '%']);
 
-            connection.query(query, ['%' + name + '%'], (error, results) => {
-                resolve(results);
-                connection.end();
-            });
-        });
-    };
-
-    return await execute(name);
+    return await dbHelper.execute(sql);
 };
 
 exports.find = async (makerid) => {
-    function execute(name, has) {
-        let connection = dbhelper.getConnection();
-        return new Promise(resolve => {
-            const query = 'SELECT * FROM house_makers WHERE maker_id = ? AND is_deleted <> 1';
+    const query = 'SELECT * FROM house_makers WHERE maker_id = ? AND is_deleted = 0';
+    let sql = mysql.format(query, [makerid]);
 
-            connection.query(query, [makerid], (error, results) => {
-                resolve(results);
-                connection.end();
-            });
-        });
-    };
-
-    return await execute(makerid);
+    return await dbHelper.execute(sql);
 }
 
 exports.houseList = async (makerid) => {
-    function execute(name, has) {
-        let connection = dbhelper.getConnection();
-        return new Promise(resolve => {
-            const query = 'SELECT house_id, house_title, created_at FROM houses WHERE maker_id = ? AND is_deleted <> 1';
+    const query = 'SELECT house_id, house_title, created_at FROM houses WHERE maker_id = ? AND is_deleted = 0';
+    let sql = mysql.format(query, [makerid]);
 
-            connection.query(query, [makerid], (error, results) => {
-                resolve(results);
-                connection.end();
-            });
-        });
-    };
-
-    return await execute(makerid);
+    return await dbHelper.execute(sql);
 }
