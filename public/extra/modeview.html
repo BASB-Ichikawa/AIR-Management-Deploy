@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<style>
+		body {
+			background-color: #000;
+			color: #fff;
+			margin: 0px;
+			overflow: hidden;
+		}
+	</style>
+</head>
+
+<body>
+	<script src="js/three.min.js"></script>
+	<script src="js/libs/inflate.min.js"></script>
+	<script src="js/loaders/OBJLoader.js"></script>
+	<script src="js/loaders/MTLLoader.js"></script>
+	<script src="js/controls/OrbitControls.js"></script>
+	<script src="js/Detector.js"></script>
+	
+	<script>
+		//const apiUrl = 'http://localhost:3000/find/zip';
+		const apiUrl = 'https://air-dev2-demo.azurewebsites.net/find/zip';
+
+		//const modeUrl = 'http://localhost:3000/model';
+		const modeUrl = `https://airdev2.blob.core.windows.net/model`;
+		
+		let query = document.location.search.substring(1);
+		let parameters = query.split('&');
+		let result = new Object();
+		for (let i = 0; i < parameters.length; i++) {
+			let element = parameters[i].split('=');
+			let paramName = decodeURIComponent(element[0]);
+			let paramValue = decodeURIComponent(element[1]);
+			result[paramName] = decodeURIComponent(paramValue);
+		}
+		
+		let params = {
+     		houseid: result.houseid
+    	}
+
+		const data = Object.keys(params).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key])).join('&');
+
+		fetch(apiUrl, {
+			method: 'post',
+			mode: 'cors',
+			credentials: "include",
+			body: data,
+			headers: {
+        		'Content-Type': 'application/x-www-form-urlencoded'
+      		}
+		}).then(response => {
+			if (response.status >= 200 && response.status < 300) {
+				response.json().then(res => {
+					let objFile = res.result.objFile;
+					let mtlFile = res.result.mtlFile;
+					let textureFiles = res.result.textureFiles;
+					
+					displayModel(modeUrl, objFile, mtlFile, textureFiles);
+        		});
+			} else {
+				const error = new Error(response.statusText);
+				error.response = response;
+
+				throw error;
+			}
+		}).catch(error => {
+			console.log(error);
+		});
+
+		function displayModel (url, objFile, mtlFile, textureFiles) {
+
+			if (!Detector.webgl) Detector.addGetWebGLMessage();
+
+			let container, stats, controls;
+			let camera, scene, renderer, light;
+			let clock = new THREE.Clock();
+			let mixers = [];
+
+			init();
+			animate();
+
+			function init() {
+
+				container = document.createElement('div');
+				document.body.appendChild(container);
+
+				camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 20000);
+				camera.position.set(0, 10, 100);
+
+				controls = new THREE.OrbitControls(camera);
+				controls.target.set(0, 0, 0);
+				controls.update();
+
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color(0xa0a0a0);
+
+				setLight();
+
+				setMesh();
+
+				setModel(url, objFile, mtlFile, textureFiles);
+				
+				renderer = new THREE.WebGLRenderer({
+					antialias: true
+				});
+				renderer.setPixelRatio(window.devicePixelRatio);
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				renderer.shadowMap.enabled = true;
+				container.appendChild(renderer.domElement);
+
+				window.addEventListener('resize', onWindowResize, false);
+			}
+
+			function setLight() {
+				light = new THREE.HemisphereLight(0xffffff, 0x444444);
+				light.position.set(0, 200, 0);
+				scene.add(light);
+
+				light = new THREE.DirectionalLight(0xffffff);
+				light.position.set(0, 200, 100);
+				light.castShadow = true;
+				light.shadow.camera.top = 180;
+				light.shadow.camera.bottom = -100;
+				light.shadow.camera.left = -120;
+				light.shadow.camera.right = 120;
+				scene.add(light);
+
+				// scene.add( new THREE.CameraHelper( light.shadow.camera ) );
+			}
+
+			function setMesh() {
+				let mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2000, 2000), new THREE.MeshPhongMaterial({
+					color: 0x999999,
+					depthWrite: false
+				}));
+				mesh.rotation.x = -Math.PI / 2;
+				mesh.receiveShadow = true;
+				scene.add(mesh);
+
+				let grid = new THREE.GridHelper(2000, 20, 0x000000, 0x000000);
+				grid.material.opacity = 0.2;
+				grid.material.transparent = true;
+				scene.add(grid);
+			}
+
+			function setModel(url, objFile, mtlFile, textureFiles) {
+				var objLoader = new THREE.OBJLoader();
+				objLoader.crossOrigin = 'anonymous';
+
+				var mtlLoader = new THREE.MTLLoader();
+				mtlLoader.crossOrigin = 'anonymous';
+
+				mtlLoader.setTexturePath(`${url}/`);
+				mtlLoader.load(`${url}/${mtlFile}`, function (materials){
+					materials.preload();
+					
+					objLoader.setMaterials(materials);
+					objLoader.load(`${url}/${objFile}`, function (object){
+						scene.add(object);
+					});
+				});
+			}
+
+			function onWindowResize() {
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize(window.innerWidth, window.innerHeight);
+			}
+
+			function animate() {
+				requestAnimationFrame(animate);
+				if (mixers.length > 0) {
+					for (let i = 0; i < mixers.length; i++) {
+						mixers[i].update(clock.getDelta());
+					}
+				}
+				renderer.render(scene, camera);
+				//stats.update();
+			}
+
+		}
+	</script>
+
+</body>
+
+</html>
