@@ -24,8 +24,6 @@
     "passport-local": "^1.0.0",
     "request": "^2.87.0",
     "unzip": "^0.1.11"
-  },
-  "engines": {
-    "node": ">=8.9.4"
   }
+
 }
