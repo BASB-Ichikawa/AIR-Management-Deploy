@@ -26,8 +26,12 @@ var options = {
     maxAge: '1d',
     redirect: false,
     setHeaders: function (res, path, stat) {
-        res.set('x-timestamp', Date.now())
-        res.set('Access-Control-Allow-Origin', 'http://localhost:3001');
+        res.set('x-timestamp', Date.now());
+        if(res.req.hostname === 'localhost') {
+            res.set('Access-Control-Allow-Origin', 'http://localhost:3001');
+        } else {
+            res.set('Access-Control-Allow-Origin', 'https://air-dev2-demo.azurewebsites.net');
+        }
     }
 }
 
@@ -47,7 +51,6 @@ app.use((req, res, next) => {
     } else {
         res.header('Access-Control-Allow-Origin', 'https://air-dev2-demo.azurewebsites.net');
     }
-
     
     res.header('Access-Control-Allow-Credentials', 'true'),
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -104,7 +107,7 @@ app.post('/edit/house', (req, res) => {
     const errors = guard.validateHouse(req);
     if (errors) {
         var mappedErrors = req.validationErrors(true);
-        res.json({ result: 'error', errors: mappedErrors});	
+        return res.json({ result: 'error', errors: mappedErrors});	
     } 
 
     house.edit(req.body).then((result) => {

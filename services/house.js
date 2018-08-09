@@ -272,7 +272,7 @@ exports.uploadedByEdit = async (houseId, oldData, newImage,  type) => {
     let params = [];
 
     switch (type) {
-        case 'houseModel':
+        case 'cgModel':
             query = 'UPDATE houses SET house_3d_data = ? WHERE house_id = ?;';
             params = [newImage, houseId];
             break;

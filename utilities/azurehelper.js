@@ -16,7 +16,6 @@ exports.getContentToFolder = (containerName, folderPath, blobName) => {
                 resolve();
             }
         });
-        
     });
 }
 

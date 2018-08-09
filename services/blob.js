@@ -1,5 +1,5 @@
 var fs = require("fs");
-var unzip = require( 'unzip' );
+var unzip2 = require('unzip2');
 var azureHelper = require('../utilities/azurehelper');
 var constants = require('../utilities/constants');
 var dbHelper = require('../utilities/dbhelper');
@@ -28,7 +28,7 @@ exports.delete = (filename, type) => {
 
 
 exports.findZip = async (zipName) => {
-    const zipFolderPath = '../server/public/model/';
+    const zipFolderPath = './public/model/';
 
     var targetRemoveFiles = fs.readdirSync(zipFolderPath);
     for (let file in targetRemoveFiles) {
@@ -43,23 +43,25 @@ exports.findZip = async (zipName) => {
 
     return new Promise(resolve => {
         fs.createReadStream(zipFolderPath + zipName + '.zip')
-            .pipe(unzip.Parse())
+            .pipe(unzip2.Parse())
             .on('entry', function (entry) {
-                let fileName = entry.path;
+                let fileName = entry.path;       
 
-                if(fileName.toLowerCase().endsWith("obj") ) {
-                    objFile = fileName.replace(zipName + '/', '');
-                    entry.pipe(fs.createWriteStream(zipFolderPath + objFile));
-                } else if(fileName.toLowerCase().endsWith("mtl") ) {
-                    mtlFile = fileName.replace(zipName + '/', '');
-                    entry.pipe(fs.createWriteStream(zipFolderPath + mtlFile));
-                } else if(fileName.toLowerCase().endsWith("jpg") ) {
-                    let texture = fileName.replace(zipName + '/', '');
-                    textureFiles.push(texture);
-                    entry.pipe(fs.createWriteStream(zipFolderPath + texture));
-                } else {
-                    entry.autodrain();
-                }
+                if(!fileName.match('__MACOSX/')) {
+                    if(fileName.toLowerCase().endsWith("obj") ) {
+                        objFile = fileName.replace(zipName + '/', '');
+                        entry.pipe(fs.createWriteStream(zipFolderPath + objFile));
+                    } else if(fileName.toLowerCase().endsWith("mtl") ) {
+                        mtlFile = fileName.replace(zipName + '/', '');
+                        entry.pipe(fs.createWriteStream(zipFolderPath + mtlFile));
+                    } else if(fileName.toLowerCase().endsWith("jpg") ) {
+                        let texture = fileName.replace(zipName + '/', '');
+                        textureFiles.push(texture);
+                        entry.pipe(fs.createWriteStream(zipFolderPath + texture));
+                    } else {
+                        entry.autodrain();
+                    }
+                } 
                 
             })
             .on('close', () => {
