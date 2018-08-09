@@ -14,9 +14,18 @@ var multer = require('multer');
 var upload = multer({ dest: './uploads/' });
 var passport = require('passport');
 var validator = require('express-validator');
+var log4js = require('log4js');
 
+// 集約エラーハンドリング
 process.on('uncaughtException', function(err) {
-    console.log(err);
+    if(err) {
+        log4js.configure({
+            appenders: { air: { type: 'file', filename: 'error.log' } },
+            categories: { default: { appenders: ['air'], level: 'error' } }
+        });
+        const logger = log4js.getLogger('air');
+        logger.error(err);
+    }
 });
 
 
