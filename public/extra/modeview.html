@@ -27,8 +27,8 @@
 		//const apiUrl = 'http://localhost:3000/find/zip';
 		const apiUrl = 'https://air-dev2-demo.azurewebsites.net/find/zip';
 
-		//const modeUrl = 'http://localhost:3000/model';
-		const modeUrl = `https://airdev2.blob.core.windows.net/model`;
+		//const modelUrl = 'http://localhost:3000/model';
+		const blobUrl = `https://air-dev2-demo.azurewebsites.net/model`;
 		
 		let query = document.location.search.substring(1);
 		let parameters = query.split('&');
@@ -61,7 +61,7 @@
 					let mtlFile = res.result.mtlFile;
 					let textureFiles = res.result.textureFiles;
 					
-					displayModel(modeUrl, objFile, mtlFile, textureFiles);
+					displayModel(modelUrl, objFile, mtlFile, textureFiles);
         		});
 			} else {
 				const error = new Error(response.statusText);
@@ -90,7 +90,7 @@
 				container = document.createElement('div');
 				document.body.appendChild(container);
 
-				camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 20000);
+				camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 200000);
 				camera.position.set(0, 10, 100);
 
 				controls = new THREE.OrbitControls(camera);
