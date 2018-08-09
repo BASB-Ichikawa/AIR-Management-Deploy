@@ -15,6 +15,11 @@ var upload = multer({ dest: './uploads/' });
 var passport = require('passport');
 var validator = require('express-validator');
 
+process.on('uncaughtException', function(err) {
+    console.log(err);
+});
+
+
 var app = express();
 
 app.use(validator());
