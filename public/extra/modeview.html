@@ -25,10 +25,10 @@
 	
 	<script>
 		//const apiUrl = 'http://localhost:3000/find/zip';
-		const apiUrl = 'https://air-dev2-demo.azurewebsites.net/find/zip';
+		const apiUrl = 'https://air-dev2-demo2.azurewebsites.net/find/zip';
 
-		//const modelUrl = 'http://localhost:3000/model';
-		const blobUrl = `https://air-dev2-demo.azurewebsites.net/model`;
+		//const blobUrl = 'http://localhost:3000/model';
+		const blobUrl = `https://air-dev2-demo2.azurewebsites.net/model`;
 		
 		let query = document.location.search.substring(1);
 		let parameters = query.split('&');
@@ -61,7 +61,7 @@
 					let mtlFile = res.result.mtlFile;
 					let textureFiles = res.result.textureFiles;
 					
-					displayModel(modelUrl, objFile, mtlFile, textureFiles);
+					displayModel(blobUrl, objFile, mtlFile, textureFiles);
         		});
 			} else {
 				const error = new Error(response.statusText);

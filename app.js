@@ -15,6 +15,7 @@ var upload = multer({ dest: './uploads/' });
 var passport = require('passport');
 var validator = require('express-validator');
 var log4js = require('log4js');
+var constants = require('./utilities/constants');
 
 // 集約エラーハンドリング
 process.on('uncaughtException', function(err) {
@@ -44,7 +45,8 @@ var options = {
         if(res.req.hostname === 'localhost') {
             res.set('Access-Control-Allow-Origin', 'http://localhost:3001');
         } else {
-            res.set('Access-Control-Allow-Origin', 'https://air-dev2-demo.azurewebsites.net');
+            //res.set('Access-Control-Allow-Origin', 'https://air-dev2-demo.azurewebsites.net');
+            res.set('Access-Control-Allow-Origin', constants.baseUrl);
         }
     }
 }
@@ -63,7 +65,8 @@ app.use((req, res, next) => {
     if(req.hostname === 'localhost') {
         res.header('Access-Control-Allow-Origin', 'http://localhost:3001');
     } else {
-        res.header('Access-Control-Allow-Origin', 'https://air-dev2-demo.azurewebsites.net');
+        //res.header('Access-Control-Allow-Origin', 'https://air-dev2-demo.azurewebsites.net');
+        res.header('Access-Control-Allow-Origin', constants.baseUrl);
     }
     
     res.header('Access-Control-Allow-Credentials', 'true'),
