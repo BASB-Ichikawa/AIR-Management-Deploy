@@ -132,6 +132,7 @@ exports.create = async (house) => {
         house.feature,
         parseFloat(house.floorSize),
         parseFloat(house.totalFloaSize),
+        house.construction,
         parseFloat(house.amount),
         parseInt(house.frontDoorDirection),
         parseInt(house.houseDirection),
@@ -160,7 +161,8 @@ exports.create = async (house) => {
 
     let query = 
         'INSERT INTO houses ' + 
-        '(house_code, maker_id, house_title, house_name, basic_info, feature, floor_size, total_floa_size, construction, amount, front_door_direction, house_direction, foundation, roof, ' + 
+        '(house_code, maker_id, house_title, house_name, basic_info, feature, floor_size, total_floa_size, ' + 
+        'construction, amount, front_door_direction, house_direction, foundation, roof, ' + 
         'outer_wall, front_door, external_fitting, material, heat_insulation, ' + 
         'kitchen, wash_stand, unit_bath, toilet, interior_door, floor_material, water_heater, ' + 
         'entrance_strage, cup_board, vr_page_url, house_page_url, staff, is_deleted, created_at) ' + 
