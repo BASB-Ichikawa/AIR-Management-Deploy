@@ -26,15 +26,37 @@ exports.delete = (filename, type) => {
     azureHelper.getBlobService().deleteBlobIfExists(containerName, blobName, () => {});
 }
 
-
-exports.findZip = async (zipName) => {
-    const zipFolderPath = './public/model/';
-
-    var targetRemoveFiles = fs.readdirSync(zipFolderPath);
-    for (let file in targetRemoveFiles) {
-        fs.unlinkSync(zipFolderPath + targetRemoveFiles[file]);
-    }
+exports.preUnZip = preUnZip = async (zipFolderPath) => {
+    return new Promise(resolve => {
+        fs.access(zipFolderPath, fs.constants.R_OK | fs.constants.W_OK, (error) => {
+            if (error) {
+                // フォルダが存在しない場合
+                if (error.code === "ENOENT") {
+                    fs.mkdirSync(zipFolderPath);
+                } else {
+                    return;
+                }
+            } else {
+                // フォルダが存在する場合
     
+                // 解凍先フォルダ配下のファイルを削除
+                var targetRemoveFiles = fs.readdirSync(zipFolderPath);
+                for (let file in targetRemoveFiles) {
+                    fs.unlinkSync(zipFolderPath + targetRemoveFiles[file]);
+                }
+            }
+            
+            resolve();
+        });
+    });
+}
+
+
+exports.findZip = async (houseId, zipName) => {
+    const zipFolderPath = './public/models/model' + houseId + '/';
+
+    await preUnZip(zipFolderPath);
+
     await azureHelper.getContentToFolder(constants.CGMODEL_CONTAINER_NAME, zipFolderPath, zipName + '.zip');
 
     let objFile = '';

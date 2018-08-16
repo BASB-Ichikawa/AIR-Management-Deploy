@@ -2,7 +2,7 @@ var mysql = require('mysql');
 var dbHelper = require('../utilities/dbhelper');
 
 exports.getCreatedHouseNumByWeek = async () => {
-    const query = 'SELECT DATE_FORMAT(created_at, "%w") as date, COUNT(*) as count FROM houses WHERE is_deleted = 1 AND (created_at BETWEEN ? AND ?) GROUP BY DATE_FORMAT(created_at, "%w");';
+    const query = 'SELECT DATE_FORMAT(created_at, "%w") as date, COUNT(*) as count FROM houses WHERE is_deleted = 0 AND (created_at BETWEEN ? AND ?) GROUP BY DATE_FORMAT(created_at, "%w");';
 
     const weekNumber = getWeekNumber(new Date(), 1);    // 第何週
     let firstDow =  getFirstDow(new Date(), 1);         // 指定曜日の月初め
@@ -20,7 +20,7 @@ exports.getCreatedHouseNumByWeek = async () => {
 };
 
 exports.getCreatedHouseNumByMonth = async () => {
-    const query = 'SELECT DATE_FORMAT(created_at, "%m") as date, COUNT(*) as count FROM houses WHERE is_deleted = 1 AND (created_at BETWEEN ? AND ?) GROUP BY DATE_FORMAT(created_at, "%m");';
+    const query = 'SELECT DATE_FORMAT(created_at, "%m") as date, COUNT(*) as count FROM houses WHERE is_deleted = 0 AND (created_at BETWEEN ? AND ?) GROUP BY DATE_FORMAT(created_at, "%m");';
 
     let start = new Date();
     start.setMonth(start.getMonth() - 12);

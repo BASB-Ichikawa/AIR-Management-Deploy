@@ -45,7 +45,6 @@ var options = {
         if(res.req.hostname === 'localhost') {
             res.set('Access-Control-Allow-Origin', 'http://localhost:3001');
         } else {
-            //res.set('Access-Control-Allow-Origin', 'https://air-dev2-demo.azurewebsites.net');
             res.set('Access-Control-Allow-Origin', constants.baseUrl);
         }
     }
@@ -65,7 +64,6 @@ app.use((req, res, next) => {
     if(req.hostname === 'localhost') {
         res.header('Access-Control-Allow-Origin', 'http://localhost:3001');
     } else {
-        //res.header('Access-Control-Allow-Origin', 'https://air-dev2-demo.azurewebsites.net');
         res.header('Access-Control-Allow-Origin', constants.baseUrl);
     }
     
@@ -176,9 +174,10 @@ app.post('/edit/house', (req, res) => {
                     prefecture.update(i+1, req.body.houseId);
                 }
             }    
+
+            res.json(result);
         });
 
-        res.json(result);
     });
 });
 
@@ -425,7 +424,7 @@ app.post('/find/zip', (req, res) => {
 
     house.findPath(houseId).then((result) => {
         const zipName = result[0].house_3d_data;
-        blob.findZip(zipName).then((result) => {
+        blob.findZip(houseId, zipName).then((result) => {
             res.json({result: result});
         });
     });

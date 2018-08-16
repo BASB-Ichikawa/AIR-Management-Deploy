@@ -16,7 +16,7 @@ exports.find = async (makerid) => {
 }
 
 exports.houseList = async (makerid) => {
-    const query = 'SELECT house_id, house_title, created_at FROM houses WHERE maker_id = ? AND is_deleted = 0';
+    const query = 'SELECT house_id, house_code, created_at FROM houses WHERE maker_id = ? AND is_deleted = 0';
     let sql = mysql.format(query, [makerid]);
 
     return await dbHelper.execute(sql);
