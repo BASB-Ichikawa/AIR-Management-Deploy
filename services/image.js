@@ -1,7 +1,7 @@
 var mysql = require('mysql');
 var dbHelper = require('../utilities/dbhelper');
 
-exports.findPlan = async (houseId) => {
+exports.findPlan = (houseId) => {
 
     const query = 'SELECT floor_plan_image FROM floor_plan_image WHERE house_id = ? ORDER BY house_id;';
 
@@ -11,10 +11,10 @@ exports.findPlan = async (houseId) => {
                 
     var sql = mysql.format(query, params);
 
-    return await dbHelper.execute(sql);
+    return dbHelper.execute(sql);
 };
 
-exports.findHouse = async (houseId) => {
+exports.findHouse = (houseId) => {
 
     const query = 'SELECT house_image FROM house_image WHERE house_id = ? ORDER BY house_id;';
 
@@ -24,7 +24,7 @@ exports.findHouse = async (houseId) => {
                 
     var sql = mysql.format(query, params);
 
-    return await dbHelper.execute(sql);
+    return dbHelper.execute(sql);
 };
 
 exports.exist = async (houseId, oldData, type) => {
@@ -47,34 +47,7 @@ exports.exist = async (houseId, oldData, type) => {
     }
                 
     var sql = mysql.format(query, params);
+    let results = await dbHelper.execute(sql);
 
-    function execute() {
-        let connection = dbHelper.getConnection();
-
-        return new Promise(resolve => {
-            connection.query(sql, 
-                (error, results) => {
-                    if (error) { 
-                        connection.rollback(() => {
-                            throw error;
-                        });
-                    }  
-                    
-                    connection.commit((error2) => {
-                        if (error2) { 
-                            connection.rollback(() => {
-                            throw error2;
-                        });
-                    }
-                });
-
-                resolve(results[0].Count);
-                connection.end();
-            });
-
-            connection.commit();
-        });
-    };
-
-    return await execute();
+    return results[0].Count;
 };

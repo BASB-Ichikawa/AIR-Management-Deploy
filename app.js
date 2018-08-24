@@ -18,7 +18,7 @@ var log4js = require('log4js');
 var constants = require('./utilities/constants');
 
 // 集約エラーハンドリング
-process.on('uncaughtException', function(err) {
+process.once('uncaughtException', (err) => {
     if(err) {
         log4js.configure({
             appenders: { air: { type: 'file', filename: 'error.log' } },
@@ -86,6 +86,7 @@ app.post('/search/house', (req, res) => {
     house.search(req.body.name, req.body.has).then((result) => {
         res.json(result);
     });
+    
 });
 
 app.post('/find/house', (req, res) => {
@@ -118,67 +119,45 @@ app.post('/find/path', (req, res) => {
     });
 });
 
-app.post('/edit/house', (req, res) => {
+/* [Memo]
+ * Bulk UpdateがNode/MySQLの仕様上できないため、Updateの個数だけConnectionが仕様される。
+ * そのため、最初に全削除したからBulk InsertすることでConnectionを効率的に使用する。
+ */
+app.post('/edit/house', async (req, res) => {
     const errors = guard.validateHouse(req);
     if (errors) {
         var mappedErrors = req.validationErrors(true);
         return res.json({ result: 'error', errors: mappedErrors});	
     } 
 
-    house.edit(req.body).then((result) => {
-        const tagIds = req.body.tagIds.split(',');
-        const stars = req.body.stars.split(',');
-        for(let i=0; i < stars.length; i++) {
-            // 星型タグ更新
-            tags.exist(tagIds[i], req.body.houseId).then((result2) => {
-                if(!result2) {
-                    tags.insert(stars[i], tagIds[i], req.body.houseId);
-                } else {
-                    tags.edit(stars[i], tagIds[i], req.body.houseId);
-                }
-            });
-        }
+    const houseId = req.body.houseId;
+
+    house.edit(req.body);
+
+    await tags.delete(houseId)
         
-        const tagDdlIds = req.body.tagDdlIds.split(',');
-        const tagDdlValues = req.body.tagDdlValues.split(',');
-        for(let i=0; i < tagDdlValues.length; i++) {
-            // DDL型タグ更新
-            tags.exist(tagDdlIds[i], req.body.houseId).then((result2) => {
-                if(!result2) {
-                    tags.insert(tagDdlValues[i], tagDdlIds[i], req.body.houseId);
-                } else {
-                    tags.edit(tagDdlValues[i], tagDdlIds[i], req.body.houseId);
-                }
-            });
-        }
+    // 星型タグ更新
+    const tagIds1 = req.body.tagIds.split(',');
+    const tagScores1 = req.body.stars.split(',');
+    await tags.updates(tagIds1, tagScores1, houseId)
 
-        const tagRadioIds = req.body.tagRadioIds.split(',');
-        const tagRadioValues = req.body.tagRadioValues.split(',');
-        for(let i=0; i < tagRadioValues.length; i++) {
-            // ラジオ型タグ更新
-            tags.exist(tagRadioIds[i], req.body.houseId).then((result2) => {
-                if(!result2) {
-                    tags.insert(tagRadioValues[i], tagRadioIds[i], req.body.houseId);
-                } else {
-                    tags.edit(tagRadioValues[i], tagRadioIds[i], req.body.houseId);
-                }
-            });
-        }
+    // DDL型タグ更新
+    const tagIds2 = req.body.tagDdlIds.split(',');
+    const tagScores2 = req.body.tagDdlValues.split(',');
+    await tags.updates(tagIds2, tagScores2, houseId)
 
-        // 購入可能エリア更新
-        prefecture.delete(req.body.houseId).then((result) => {
-            const prefectures = req.body.prefectures.split(',');
+    // ラジオ型タグ更新
+    const tagIds3 = req.body.tagRadioIds.split(',');
+    const tagScores3 = req.body.tagRadioValues.split(',');
+    await tags.updates(tagIds3, tagScores3, houseId)
             
-            for(let i=0; i < prefectures.length; i++) {
-                if(prefectures[i].toLowerCase() === "true") {
-                    prefecture.update(i+1, req.body.houseId);
-                }
-            }    
+    // 購入可能エリア更新
+    await prefecture.delete(houseId)
 
-            res.json(result);
-        });
+    const prefectures = req.body.prefectures.split(',');
+    await prefecture.updates(prefectures, houseId);
 
-    });
+    res.json({ status: 'success' });
 });
 
 app.post('/edit/cgmodel', upload.fields([ { name: 'file' } ]), (req, res) => {
@@ -236,8 +215,8 @@ app.post('/edit/floorimage', upload.fields([ { name: 'file' } ]), (req, res) => 
     const newImage = file.filename;
     const type = 'floorImage';
     
-    image.exist(houseId, oldData, type).then((count) => {
-        if(count === 0) {
+    image.exist(houseId, oldData, type).thzen((count) => {
+        if(count === 0) {z
             house.uploadByCreate(file, type).then((result) => {
                 house.uploadedByCreate(houseId, newImage, type).then((result2) => {
                     res.json({ status: 'success' });
@@ -256,42 +235,55 @@ app.post('/edit/floorimage', upload.fields([ { name: 'file' } ]), (req, res) => 
 });
 
 
-app.post('/create/house', (req, res) => {
+app.post('/create/house', async (req, res) => {
+    
     const errors = guard.validateHouse(req);
     if (errors) {
         var mappedErrors = req.validationErrors(true);
         return res.json({ status: 'error', errors: mappedErrors});	
     } 
 
-    house.create(req.body).then((houseId) => {
-        const tagIds = req.body.tagIds.split(',');
-        const stars = req.body.stars.split(',');
-        for(let i=0; i < stars.length; i++) {
-            tags.insert(stars[i], tagIds[i], houseId);
-        }
+    const result = await house.create(req.body);
+    const houseId = result.insertId;
 
-        const tagDdlIds = req.body.tagDdlIds.split(',');
-        const tagDdlValues = req.body.tagDdlValues.split(',');
-        for(let i=0; i < tagDdlIds.length; i++) {
-            tags.insert(tagDdlValues[i], tagDdlIds[i], houseId);
-        }
-        
-        const tagRadioIds = req.body.tagRadioIds.split(',');
-        const tagRadioValues = req.body.tagRadioValues.split(',');
-        for(let i=0; i < tagRadioIds.length; i++) {
-            tags.insert(tagRadioValues[i], tagRadioIds[i], houseId);
-        }
+    // // 星型タグ追加
+    const tagIds = req.body.tagIds.split(',');
+    const stars = req.body.stars.split(',');
+    let insertStarTags = [];
+    for(let i=0; i < stars.length; i++) {
+        insertStarTags.push({ tagScore: stars[i], tagId: tagIds[i], houseId: houseId });
+    }
+    if(insertStarTags) {
+        tags.inserts(insertStarTags);
+    }
 
-        // 購入可能エリア更新
-        const prefectures = req.body.prefectures.split(',');
-        for(let i=0; i < prefectures.length; i++) {
-            if(prefectures[i].toLowerCase() === "true") {
-                prefecture.update(i+1, houseId);
-            }
-        }    
+    // DDL型タグ追加
+    const tagDdlIds = req.body.tagDdlIds.split(',');
+    const tagDdlValues = req.body.tagDdlValues.split(',');
+    let insertDdlTags = [];
+    for(let i=0; i < tagDdlValues.length; i++) {
+        insertDdlTags.push({ tagScore: tagDdlValues[i], tagId: tagDdlIds[i], houseId: houseId });
+    }
+    if(insertDdlTags) {
+        tags.inserts(insertDdlTags);
+    }
+    
+    // ラジオ型タグ追加
+    const tagRadioIds = req.body.tagRadioIds.split(',');
+    const tagRadioValues = req.body.tagRadioValues.split(',');
+    let insertRadioTags = [];
+    for(let i=0; i < tagRadioValues.length; i++) {
+        insertRadioTags.push({ tagScore: tagRadioValues[i], tagId: tagRadioIds[i], houseId: houseId });
+    }
+    if(insertRadioTags) {
+        tags.inserts(insertRadioTags);
+    }
 
-        res.json({ status: 'success', result: houseId});	
-    });
+    // // 購入可能エリア追加
+    const prefectures = req.body.prefectures.split(',');
+    await prefecture.updates(prefectures, houseId);
+
+    res.json({ status: 'success', result: houseId});	
 });
 
 app.post('/create/cgmodel', upload.fields([ { name: 'file' } ]), (req, res) => {
@@ -428,8 +420,14 @@ app.post('/find/zip', (req, res) => {
             res.json({result: result});
         });
     });
-    
-    
+});
+
+app.post('/delete/zip', (req, res) => {
+    const houseId = parseInt(req.body.houseid);
+
+    blob.deleteZip(houseId).then((result) => {
+        res.json(result);
+    });
 });
 
 

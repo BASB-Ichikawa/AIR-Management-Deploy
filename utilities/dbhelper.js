@@ -1,39 +1,33 @@
 var mysql = require('mysql');
 var constants = require('../utilities/constants');
 
-const getConnection = exports.getConnection = function () {
+const getConnection = () => {
     return mysql.createConnection({
         host: constants.DB_URL,
         user: constants.DB_USER,
         password: constants.DB_PASS,
-        database: constants.DB_NAME
+        database: constants.DB_NAME,
+        multipleStatements: true
     });
 }
 
-exports.execute = function(sql) {
-    return new Promise(resolve => {
-        const connection = getConnection();
-        connection.query(sql, 
-            (error, results) => {
-                if (error) { 
-                    connection.rollback(() => {
-                        throw error;
-                    });
-                }  
-                
-                connection.commit((error2) => {
-                    if (error2) { 
-                        connection.rollback(() => {
-                            throw error2;
-                        });
-                    }
-                    
-                    resolve(results);
-                    connection.end();
-                });
-            }
-        );
+exports.execute = (sql) => {
+    const connection = getConnection();
 
-        connection.commit();
+    return new Promise((resolve, rejected) => {
+        connection.query(sql, (error, results) => {
+            if (error) { 
+                console.debug('エラー情報:' + error);
+                console.debug('エラーSQL:' + sql);
+
+                connection.end();
+                rejected();
+            }  
+            
+            connection.end();
+            resolve(results);
+        });
+        
     });
 };
+

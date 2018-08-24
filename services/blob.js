@@ -51,7 +51,6 @@ exports.preUnZip = preUnZip = async (zipFolderPath) => {
     });
 }
 
-
 exports.findZip = async (houseId, zipName) => {
     const zipFolderPath = './public/models/model' + houseId + '/';
 
@@ -92,3 +91,13 @@ exports.findZip = async (houseId, zipName) => {
     });
         
 };
+
+exports.deleteZip = async (houseId) => {
+    const zipFolderPath = './public/models/model' + houseId + '/';
+
+    // 解凍先フォルダ配下のファイルを削除
+    var targetRemoveFiles = fs.readdirSync(zipFolderPath);
+    for (let file in targetRemoveFiles) {
+        fs.unlinkSync(zipFolderPath + targetRemoveFiles[file]);
+    }
+}

@@ -1,7 +1,7 @@
 var mysql = require('mysql');
 var dbHelper = require('../utilities/dbhelper');
 
-exports.getCreatedHouseNumByWeek = async () => {
+exports.getCreatedHouseNumByWeek = () => {
     const query = 'SELECT DATE_FORMAT(created_at, "%w") as date, COUNT(*) as count FROM houses WHERE is_deleted = 0 AND (created_at BETWEEN ? AND ?) GROUP BY DATE_FORMAT(created_at, "%w");';
 
     const weekNumber = getWeekNumber(new Date(), 1);    // 第何週
@@ -16,10 +16,10 @@ exports.getCreatedHouseNumByWeek = async () => {
 
     var sql = mysql.format(query, [startDate, endDate]);
 
-    return await dbHelper.execute(sql);
+    return dbHelper.execute(sql);
 };
 
-exports.getCreatedHouseNumByMonth = async () => {
+exports.getCreatedHouseNumByMonth = () => {
     const query = 'SELECT DATE_FORMAT(created_at, "%m") as date, COUNT(*) as count FROM houses WHERE is_deleted = 0 AND (created_at BETWEEN ? AND ?) GROUP BY DATE_FORMAT(created_at, "%m");';
 
     let start = new Date();
@@ -31,7 +31,7 @@ exports.getCreatedHouseNumByMonth = async () => {
 
     var sql = mysql.format(query, [startMonth, endMonth]);
     
-    return await dbHelper.execute(sql);
+    return dbHelper.execute(sql);
 };
 
 

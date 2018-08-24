@@ -25,6 +25,10 @@ exports.init = async (app, passport) => {
                             },
                             body: JSON.stringify({ email: username, password: password })
                         }, (error, response, body) => {
+                            if(error) {
+                                done(null, false);
+                            }
+
                             if(response.statusCode === 200) {
                                 done(null, JSON.parse(body).userName);
                             } else {

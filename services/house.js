@@ -7,41 +7,32 @@ var constants = require('../utilities/constants');
 
 const folderPath = './uploads/'
 
-exports.search = async (name, has) => {
+exports.search = (name, has) => {
     const query = 'SELECT house_id, house_code, house_makers.maker_id, maker_name FROM houses ' + 
                   'JOIN house_makers ON houses.maker_id = house_makers.maker_id ' + 
                   'WHERE house_code LIKE ? AND houses.is_deleted = 0';
 
     let sql = mysql.format(query, ['%' + name + '%']);
 
-    return await dbHelper.execute(sql);
+    return dbHelper.execute(sql);
 };
 
-exports.find = async (houseid) => {
+exports.find = (houseid) => {
     const query = 'SELECT * FROM houses WHERE house_id = ? AND houses.is_deleted = 0';
 
     let sql = mysql.format(query, [houseid]);
 
-    return await dbHelper.execute(sql);
+    return dbHelper.execute(sql);
 };
 
-exports.findPath = async (houseid) => {
-    function execute(houseid) {
-        let connection = dbHelper.getConnection();
-        return new Promise(resolve => {
-            const query = 'SELECT house_3d_data FROM houses WHERE house_id = ? AND houses.is_deleted = 0';
+exports.findPath = (houseid) => {
+    const query = 'SELECT house_3d_data FROM houses WHERE house_id = ? AND houses.is_deleted = 0';
+    let sql = mysql.format(query, [houseid]);
 
-            connection.query(query, [houseid], (error, results) => {
-                resolve(results);
-                connection.end();
-            });
-        });
-    };
-
-    return await execute(houseid);
+    return dbHelper.execute(sql);
 };
 
-exports.edit = async (house) => {
+exports.edit = (house) => {
 
     const query = 
         'UPDATE houses SET ' + 
@@ -116,12 +107,11 @@ exports.edit = async (house) => {
     ]
                 
     var sql = mysql.format(query, params);
-    //console.log(sql)
 
-    return await dbHelper.execute(sql);
+    return dbHelper.execute(sql);
 };
 
-exports.create = async (house) => {
+exports.create = (house) => {
     
     var params = [
         house.houseCode,
@@ -173,43 +163,10 @@ exports.create = async (house) => {
         questions.push('?');
     }
     query += questions.join(',') + ');';
-    
+
     var sql = mysql.format(query, params);
 
-    function execute() {
-        let connection = dbHelper.getConnection();
-
-        return new Promise(resolve => {
-            connection.query(sql, 
-                (error, results) => {
-                    if (error) { 
-                        connection.rollback(() => {
-                            throw error;
-                        });
-                    }  
-                    connection.commit((error2) => {
-                        if (error2) { 
-                            connection.rollback(() => {
-                            throw error2;
-                        });
-
-
-                    }
-                });
-
-                // 挿入したデータのhouse_idを取得
-                connection.query('SELECT last_insert_id() as houseid FROM houses LIMIT 1;', (error, results) => {
-                    resolve(results[0].houseid);
-                    connection.end();
-                })
-                
-            });
-
-            connection.commit();
-        });
-    };
-
-    return await execute();
+    return dbHelper.execute(sql);
 };
 
 exports.uploadByEdit = async (file, oldData, type) => {
@@ -239,13 +196,12 @@ exports.uploadByEdit = async (file, oldData, type) => {
             break;
     }
 
-    function execute() {
+    const execute = () => {
         return new Promise(resolve => {
             // クラウド内の既存データファイルを削除
             azureHelper.getBlobService().deleteBlobIfExists(containerName, oldData, (error, result, response) => {
                 if(error) {
-                    // TODO: エラー時ログ出力 
-                    
+                    throw error;
                 }
             });
 
@@ -254,8 +210,7 @@ exports.uploadByEdit = async (file, oldData, type) => {
                 // 一時ファイルを削除
                 fs.unlink(fullPath, (error) => {
                     if(error) {
-                        // TODO: エラー時ログ出力 
-                        
+                        throw error;
                     }
                 });
 
@@ -317,14 +272,13 @@ exports.uploadByCreate = async (file, type) => {
             break;
     }
 
-    function execute() {
+    const execute = () => {
         return new Promise(resolve => {
             azureHelper.getBlobService().createBlockBlobFromLocalFile(containerName, physicalName, fullPath, option, (error, result, response) => {
                 // 一時ファイルを削除
                 fs.unlink(fullPath, (error) => {
                     if(error) {
-                        // TODO: エラー時ログ出力 
-                        
+                        throw error;
                     }
                 });
 
