@@ -3,7 +3,7 @@ var dbHelper = require('../utilities/dbhelper');
 
 exports.findPlan = (houseId) => {
 
-    const query = 'SELECT floor_plan_image FROM floor_plan_image WHERE house_id = ? ORDER BY house_id;';
+    const query = 'SELECT floor_plan_image FROM floor_plan_image WHERE house_id = ? ORDER BY display_order;';
 
     var params = [
         parseInt(houseId),
@@ -16,7 +16,7 @@ exports.findPlan = (houseId) => {
 
 exports.findHouse = (houseId) => {
 
-    const query = 'SELECT house_image FROM house_image WHERE house_id = ? ORDER BY house_id;';
+    const query = 'SELECT house_image FROM house_image WHERE house_id = ? ORDER BY display_order;';
 
     var params = [
         parseInt(houseId),

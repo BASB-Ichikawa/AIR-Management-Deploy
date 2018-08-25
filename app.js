@@ -120,8 +120,8 @@ app.post('/find/path', (req, res) => {
 });
 
 /* [Memo]
- * Bulk UpdateがNode/MySQLの仕様上できないため、Updateの個数だけConnectionが仕様される。
- * そのため、最初に全削除したからBulk InsertすることでConnectionを効率的に使用する。
+ * Bulk UpdateがNode/MySQLの仕様上できないため、Updateの個数だけConnectionが使用される。
+ * そのため、最初に当該タグを全削除したからBulk InsertすることでConnectionを効率的に使用する。
  */
 app.post('/edit/house', async (req, res) => {
     const errors = guard.validateHouse(req);
@@ -134,28 +134,36 @@ app.post('/edit/house', async (req, res) => {
 
     house.edit(req.body);
 
-    await tags.delete(houseId)
-        
     // 星型タグ更新
-    const tagIds1 = req.body.tagIds.split(',');
-    const tagScores1 = req.body.stars.split(',');
-    await tags.updates(tagIds1, tagScores1, houseId)
+    if(req.body.tagIds) {
+        const tagIds1 = req.body.tagIds.split(',');
+        const tagScores1 = req.body.stars.split(',');
+        await tags.delete(houseId, tagIds1);
+        await tags.updates(tagIds1, tagScores1, houseId);
+    }
 
     // DDL型タグ更新
-    const tagIds2 = req.body.tagDdlIds.split(',');
-    const tagScores2 = req.body.tagDdlValues.split(',');
-    await tags.updates(tagIds2, tagScores2, houseId)
+    if(req.body.tagDdlIds) {
+        const tagIds2 = req.body.tagDdlIds.split(',');
+        const tagScores2 = req.body.tagDdlValues.split(',');
+        await tags.delete(houseId, tagIds2);
+        await tags.updates(tagIds2, tagScores2, houseId);
+    }
 
     // ラジオ型タグ更新
-    const tagIds3 = req.body.tagRadioIds.split(',');
-    const tagScores3 = req.body.tagRadioValues.split(',');
-    await tags.updates(tagIds3, tagScores3, houseId)
+    if(req.body.tagRadioIds) {
+        const tagIds3 = req.body.tagRadioIds.split(',');
+        const tagScores3 = req.body.tagRadioValues.split(',');
+        await tags.delete(houseId, tagIds3);
+        await tags.updates(tagIds3, tagScores3, houseId);
+    }
             
     // 購入可能エリア更新
-    await prefecture.delete(houseId)
-
-    const prefectures = req.body.prefectures.split(',');
-    await prefecture.updates(prefectures, houseId);
+    if(req.body.prefectures) {
+        await prefecture.delete(houseId)
+        const prefectures = req.body.prefectures.split(',');
+        await prefecture.updates(prefectures, houseId);
+    }
 
     res.json({ status: 'success' });
 });
@@ -190,20 +198,19 @@ app.post('/edit/houseimage', upload.fields([ { name: 'file' } ]), (req, res) => 
     const oldData = req.body.image;
     const newImage = file.filename;
     const type = 'houseImage';
+    const orderNo = req.body.orderNo;
        
-    image.exist(houseId, oldData, type).then((count) => {
+    image.exist(houseId, oldData, type).then(async (count) => {
         if(count === 0) {
-            house.uploadByCreate(file, type).then((result) => {
-                house.uploadedByCreate(houseId, newImage, type).then((result2) => {
-                    res.json({ status: 'success' });
-                });
-            });
+            await house.uploadByCreate(file, type);
+            await house.uploadedByCreate(houseId, newImage, type, orderNo)
+
+            res.json({ status: 'success' });
         } else {
-            house.uploadByEdit(file, oldData, type).then((result) => {
-                house.uploadedByEdit(houseId, oldData, newImage, type).then((result2) => {
-                    res.json({ status: 'success' });
-                });
-            });
+            await house.uploadByEdit(file, oldData, type);
+            await house.uploadedByEdit(houseId, oldData, newImage, type, orderNo);
+
+            res.json({ status: 'success' });
         }
     });
 });
@@ -214,20 +221,19 @@ app.post('/edit/floorimage', upload.fields([ { name: 'file' } ]), (req, res) => 
     const oldData = req.body.image;
     const newImage = file.filename;
     const type = 'floorImage';
+    const orderNo = req.body.orderNo;
     
-    image.exist(houseId, oldData, type).thzen((count) => {
-        if(count === 0) {z
-            house.uploadByCreate(file, type).then((result) => {
-                house.uploadedByCreate(houseId, newImage, type).then((result2) => {
-                    res.json({ status: 'success' });
-                });
-            });
+    image.exist(houseId, oldData, type).then(async (count) => {
+        if(count === 0) {
+            await house.uploadByCreate(file, type);
+            await house.uploadedByCreate(houseId, newImage, type, orderNo);
+
+            res.json({ status: 'success' });
         } else {
-            house.uploadByEdit(file, oldData, type).then((result) => {
-                house.uploadedByEdit(houseId, oldData, newImage, type).then((result2) => {
-                    res.json({ status: 'success' });
-                });
-            });
+            await house.uploadByEdit(file, oldData, type);
+            await house.uploadedByEdit(houseId, oldData, newImage, type, orderNo);
+
+            res.json({ status: 'success' });
         }
     });
 
@@ -298,26 +304,26 @@ app.post('/create/cgmodel', upload.fields([ { name: 'file' } ]), (req, res) => {
     });
 });
 
-app.post('/create/houseimage', upload.fields([ { name: 'file' } ]), (req, res) => {
+app.post('/create/houseimage', upload.fields([ { name: 'file' } ]), async (req, res) => {
     const file = req.files.file[0];
     const houseId = parseInt(req.query.houseid);
+    const orderNo = req.body.orderNo;
     
-    house.uploadByCreate(file, 'houseImage').then((result) => {
-        house.uploadedByCreate(houseId, result, 'houseImage').then((result2) => {
-            res.json({ status: 'success' });
-        });
-    });
+    const result = await house.uploadByCreate(file, 'houseImage');
+    await house.uploadedByCreate(houseId, result, 'houseImage', orderNo);
+
+    res.json({ status: 'success' });
 });
 
-app.post('/create/floorimage', upload.fields([ { name: 'file' } ]), (req, res) => {
+app.post('/create/floorimage', upload.fields([ { name: 'file' } ]), async (req, res) => {
     const file = req.files.file[0];
     const houseId = parseInt(req.query.houseid);
+    const orderNo = req.body.orderNo;
     
-    house.uploadByCreate(file, 'floorImage').then((result) => {
-        house.uploadedByCreate(houseId, result, 'floorImage').then((result2) => {
-            res.json({ status: 'success' });
-        });
-    });
+    const result = await house.uploadByCreate(file, 'floorImage');
+    await house.uploadedByCreate(houseId, result, 'floorImage', orderNo);
+
+    res.json({ status: 'success' });
 });
 
 

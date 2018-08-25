@@ -169,7 +169,7 @@ exports.create = (house) => {
     return dbHelper.execute(sql);
 };
 
-exports.uploadByEdit = async (file, oldData, type) => {
+exports.uploadByEdit = (file, oldData, type) => {
     let physicalName = '';
     let containerName = '';
     let option = {};
@@ -220,35 +220,35 @@ exports.uploadByEdit = async (file, oldData, type) => {
         });
     };
 
-    return await execute();
+    return execute();
 };
 
-exports.uploadedByEdit = async (houseId, oldData, newImage,  type) => {
+exports.uploadedByEdit = (houseId, oldData, newImage, type, orderNo) => {
 
     let query = '';
     let params = [];
 
     switch (type) {
         case 'cgModel':
-            query = 'UPDATE houses SET house_3d_data = ? WHERE house_id = ?;';
-            params = [newImage, houseId];
+            query = 'UPDATE houses SET house_3d_data = ?, updated_at = ? WHERE house_id = ?;';
+            params = [newImage, new Date(), houseId];
             break;
         case 'houseImage':
-            query = 'UPDATE house_image SET house_image = ? WHERE house_id = ? AND house_image = ?;';
-            params = [newImage, houseId, oldData];
+            query = 'UPDATE house_image SET house_image = ?, display_order = ?, updated_at = ? WHERE house_id = ? AND house_image = ?;';
+            params = [newImage, orderNo, new Date(), houseId, oldData];
             break;
         case 'floorImage':
-            query = 'UPDATE floor_plan_image SET floor_plan_image = ? WHERE house_id = ? AND floor_plan_image = ?;';
-            params = [newImage, houseId, oldData];
+            query = 'UPDATE floor_plan_image SET floor_plan_image = ?, display_order = ?, updated_at = ? WHERE house_id = ? AND floor_plan_image = ?;';
+            params = [newImage, orderNo, new Date(), houseId, oldData];
             break;
     }
                 
     let sql = mysql.format(query, params);
 
-    return await dbHelper.execute(sql);
+    return dbHelper.execute(sql);
 };
 
-exports.uploadByCreate = async (file, type) => {
+exports.uploadByCreate = (file, type) => {
     let physicalName = '';
     let containerName = '';
     let option = {};
@@ -288,32 +288,31 @@ exports.uploadByCreate = async (file, type) => {
         });
     };
 
-    return await execute();
+    return execute();
 };
 
-exports.uploadedByCreate = async (houseId, newImage, type) => {
+exports.uploadedByCreate = (houseId, newImage, type, orderNo) => {
     let query = '';
+    let params = [];
 
     switch (type) {
         case 'cgModel':
-            query = 'UPDATE houses SET house_3d_data = ? WHERE house_id = ?';
+            query = 'UPDATE houses SET house_3d_data = ?, updated_at = ? WHERE house_id = ?';
+            params = [newImage, new Date(), houseId];
             break;
         case 'houseImage':
-            query = 'INSERT INTO house_image(house_image, house_id) VALUES(?,?) ';
+            query = 'INSERT INTO house_image(house_image, house_id, display_order, created_at) VALUES (?,?,?,?) ';
+            params = [newImage, houseId, orderNo, new Date()];
             break;
         case 'floorImage':
-            query = 'INSERT INTO floor_plan_image(floor_plan_image, house_id) VALUES(?,?) ';
+            query = 'INSERT INTO floor_plan_image(floor_plan_image, house_id, display_order, created_at) VALUES (?,?,?,?) ';
+            params = [newImage, houseId, orderNo, new Date()];
             break;
     }
-
-    let params = [
-        newImage,
-        houseId,
-    ]
-                
+            
     let sql = mysql.format(query, params);
 
-    return await dbHelper.execute(sql);
+    return dbHelper.execute(sql);
 };
 
 exports.delete = (houseId) => {

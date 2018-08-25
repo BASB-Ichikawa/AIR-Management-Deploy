@@ -60,6 +60,6 @@ exports.delete = (houseId) => {
     ]
                 
     var sql = mysql.format(query, params);
-
+    
     return dbHelper.execute(sql);
 };

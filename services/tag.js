@@ -118,14 +118,22 @@ exports.updates = (tagIds, tagScores, houseId) => {
     return dbHelper.execute(sql);
 }
 
-exports.delete = (houseId) => {
-    const query = 'DELETE FROM house_tags_map WHERE house_id = ?;';
-
+exports.delete = (houseId, tagIds) => {
+    let query = 'DELETE FROM house_tags_map WHERE house_id = ? AND (';
     var params = [
         parseInt(houseId),
     ]
+
+    let conditions = [];
+    tagIds.map(tagId => {
+        conditions.push('tag_id = ?');
+        params.push(tagId);
+    });
+
+    query += conditions.join(' OR ');
+    query += ');'
                 
     var sql = mysql.format(query, params);
-
+    
     return dbHelper.execute(sql);
 };
