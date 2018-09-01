@@ -2,12 +2,16 @@
 /*******************************************
  * BLOB情報
 *******************************************/
-// 
 
 // 開発用
-exports.ACCESS_KEY = 'qzkFDaotL9SPh8dkCiL+AXMoCdRUzEYuoZBYm6Pw8WzpZjtUfMqsPcX8XIjR3kRvkofyj3i+LnCbG18tiEXLIw==';
-exports.STORAGE_ACCOUNT = 'airdev2';
+//exports.ACCESS_KEY = 'qzkFDaotL9SPh8dkCiL+AXMoCdRUzEYuoZBYm6Pw8WzpZjtUfMqsPcX8XIjR3kRvkofyj3i+LnCbG18tiEXLIw==';
+//exports.STORAGE_ACCOUNT = 'airdev2';
 
+// IT用
+exports.ACCESS_KEY = 'Xt7F0O2oAUTFjVWhntX4h1Bx7mgt0/O0JzCQsN3BywClyVzv52bMo2mLjOOV5LYIPgl5y9exCa2OK14ds6coUw==';
+exports.STORAGE_ACCOUNT = 'airblob';
+
+// 全環境共通
 exports.CGMODEL_CONTAINER_NAME = 'house3dmodel';
 exports.HOUSE_IMAGE_CONTAINER_NAME = 'houseimage';
 exports.PLAN_IMAGE_CONTAINER_NAME = 'floorimage';
