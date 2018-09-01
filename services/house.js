@@ -17,20 +17,27 @@ exports.search = (name, has) => {
     return dbHelper.execute(sql);
 };
 
-exports.find = (houseid) => {
+exports.find = (houseId) => {
     const query = 'SELECT * FROM houses WHERE house_id = ? AND houses.is_deleted = 0';
 
-    let sql = mysql.format(query, [houseid]);
+    let sql = mysql.format(query, [houseId]);
 
     return dbHelper.execute(sql);
 };
 
-exports.findPath = (houseid) => {
+exports.findPath = (houseId) => {
     const query = 'SELECT house_3d_data FROM houses WHERE house_id = ? AND houses.is_deleted = 0';
-    let sql = mysql.format(query, [houseid]);
+    let sql = mysql.format(query, [houseId]);
 
     return dbHelper.execute(sql);
 };
+
+exports.checkDuplecate = (houseCode) => {
+    const query = 'SELECT COUNT(house_code) AS count FROM houses WHERE house_code = ?';
+    let sql = mysql.format(query, [houseCode]);
+
+    return dbHelper.execute(sql);
+}
 
 exports.edit = (house) => {
 
@@ -320,7 +327,7 @@ exports.delete = (houseId) => {
     let sql1 = mysql.format(query1, [houseId]);
     dbHelper.execute(sql1);
 
-    const query2 = 'DELETE FROM house_tags_map WHERE house_id = ?;';
+    const query2 = 'DELETE FROM house_tag_map WHERE house_id = ?;';
     let sql2 = mysql.format(query2, [houseId]);
     dbHelper.execute(sql2);
 

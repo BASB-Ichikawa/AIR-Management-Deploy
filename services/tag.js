@@ -3,7 +3,7 @@ var dbHelper = require('../utilities/dbhelper');
 
 exports.exist = async (tagId, houseId) => {
 
-    const query = 'SELECT COUNT(*) AS Count FROM house_tags_map WHERE house_id = ? AND tag_id = ?;';
+    const query = 'SELECT COUNT(*) AS Count FROM house_tag_map WHERE house_id = ? AND tag_id = ?;';
 
     var params = [
         parseInt(houseId),
@@ -17,28 +17,28 @@ exports.exist = async (tagId, houseId) => {
 };
 
 exports.findStar = (houseid) => {
-    const query = 'SELECT * FROM house_tags_map JOIN house_tags on house_tags_map.tag_id = house_tags.tag_id WHERE house_id = ? AND house_tags.input_type = 1 ORDER BY house_tags_map.tag_id;'
+    const query = 'SELECT * FROM house_tag_map JOIN house_tags on house_tag_map.tag_id = house_tags.tag_id WHERE house_id = ? AND house_tags.input_type = 1 ORDER BY house_tag_map.tag_id;'
     let sql = mysql.format(query, [houseid]);
 
     return dbHelper.execute(sql);
 };
 
 exports.findDDL = (houseid) => {
-    const query = 'SELECT house_tags_map.tag_id, tag_score FROM house_tags_map JOIN house_tags on house_tags_map.tag_id = house_tags.tag_id WHERE house_id = ? AND house_tags.input_type = 2 ORDER BY house_tags_map.tag_id;'
+    const query = 'SELECT house_tag_map.tag_id, tag_score FROM house_tag_map JOIN house_tags on house_tag_map.tag_id = house_tags.tag_id WHERE house_id = ? AND house_tags.input_type = 2 ORDER BY house_tag_map.tag_id;'
     let sql = mysql.format(query, [houseid]);
 
     return dbHelper.execute(sql);
 };
 
 exports.findRadio = (houseid) => {
-    const query = 'SELECT house_tags_map.tag_id, tag_score FROM house_tags_map JOIN house_tags on house_tags_map.tag_id = house_tags.tag_id WHERE house_id = ? AND house_tags.input_type = 3 ORDER BY house_tags_map.tag_id;'
+    const query = 'SELECT house_tag_map.tag_id, tag_score FROM house_tag_map JOIN house_tags on house_tag_map.tag_id = house_tags.tag_id WHERE house_id = ? AND house_tags.input_type = 3 ORDER BY house_tag_map.tag_id;'
     let sql = mysql.format(query, [houseid]);
 
     return dbHelper.execute(sql);
 };
 
 exports.insert = (tagScore, tagId, houseId) => {
-    const query = 'INSERT INTO house_tags_map (house_id, tag_id, tag_score)VALUES(?,?,?);';
+    const query = 'INSERT INTO house_tag_map (house_id, tag_id, tag_score)VALUES(?,?,?);';
 
     var params = [
         parseInt(houseId),
@@ -52,7 +52,7 @@ exports.insert = (tagScore, tagId, houseId) => {
 };
 
 exports.inserts = (insertTags) => {
-    let query = 'INSERT INTO house_tags_map (house_id, tag_id, tag_score) VALUES ';
+    let query = 'INSERT INTO house_tag_map (house_id, tag_id, tag_score) VALUES ';
     let params = [];
     let paramStr = [];
 
@@ -71,7 +71,7 @@ exports.inserts = (insertTags) => {
 
 
 exports.edit = (tagScore, tagId, houseId) => {
-    const query = 'UPDATE house_tags_map SET tag_score = ? WHERE house_id = ? AND tag_id = ?';
+    const query = 'UPDATE house_tag_map SET tag_score = ? WHERE house_id = ? AND tag_id = ?';
 
     var params = [
         parseInt(tagScore),
@@ -89,7 +89,7 @@ exports.edits = (updateTags) => {
     let params = [];
     
     for(let i=0; i < updateTags.length; i++) {
-        query += 'UPDATE house_tags_map SET tag_score = ? WHERE house_id = ? AND tag_id = ?;';
+        query += 'UPDATE house_tag_map SET tag_score = ? WHERE house_id = ? AND tag_id = ?;';
         params.push(parseInt(updateTags[i].tagScore));
         params.push(parseInt(updateTags[i].houseId));
         params.push(parseInt(updateTags[i].tagId));
@@ -101,7 +101,7 @@ exports.edits = (updateTags) => {
 };
 
 exports.updates = (tagIds, tagScores, houseId) => {
-    let query = 'INSERT INTO house_tags_map (house_id, tag_id, tag_score) VALUES ';
+    let query = 'INSERT INTO house_tag_map (house_id, tag_id, tag_score) VALUES ';
     let params = [];
     let paramStr = [];
 
@@ -119,7 +119,7 @@ exports.updates = (tagIds, tagScores, houseId) => {
 }
 
 exports.delete = (houseId, tagIds) => {
-    let query = 'DELETE FROM house_tags_map WHERE house_id = ? AND (';
+    let query = 'DELETE FROM house_tag_map WHERE house_id = ? AND (';
     var params = [
         parseInt(houseId),
     ]

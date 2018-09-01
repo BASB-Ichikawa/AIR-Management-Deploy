@@ -124,14 +124,14 @@ app.post('/find/path', (req, res) => {
  * そのため、最初に当該タグを全削除したからBulk InsertすることでConnectionを効率的に使用する。
  */
 app.post('/edit/house', async (req, res) => {
+    // バリデーションチェック
     const errors = guard.validateHouse(req);
     if (errors) {
-        var mappedErrors = req.validationErrors(true);
-        return res.json({ result: 'error', errors: mappedErrors});	
+        const mappedErrors = req.validationErrors(true);
+        return res.json({ status: 'error', errors: mappedErrors});	
     } 
 
     const houseId = req.body.houseId;
-
     house.edit(req.body);
 
     // 星型タグ更新
@@ -242,12 +242,19 @@ app.post('/edit/floorimage', upload.fields([ { name: 'file' } ]), (req, res) => 
 
 
 app.post('/create/house', async (req, res) => {
-    
+    // バリデーションチェック
     const errors = guard.validateHouse(req);
     if (errors) {
         var mappedErrors = req.validationErrors(true);
         return res.json({ status: 'error', errors: mappedErrors});	
     } 
+
+     // 建物コードの重複チェック
+     const checkResult = await house.checkDuplecate(req.body.houseCode);
+     if(checkResult[0].count > 0) {
+         const duplicatedError = { houseCode: { msg: '建物コードが重複しています' }  }
+         return res.json({ status: 'error', errors: duplicatedError });	
+     }
 
     const result = await house.create(req.body);
     const houseId = result.insertId;
