@@ -24,12 +24,6 @@
 	<script src="js/Detector.js"></script>
 	
 	<script>
-		//const apiUrl = 'http://localhost:3000/find/zip';
-		const apiUrl = 'https://air-dev2-demo2.azurewebsites.net/find/zip';
-
-		//const blobUrl = 'http://localhost:3000/model';
-		const blobUrl = `https://air-dev2-demo2.azurewebsites.net/model`;
-		
 		let query = document.location.search.substring(1);
 		let parameters = query.split('&');
 		let result = new Object();
@@ -39,12 +33,17 @@
 			let paramValue = decodeURIComponent(element[1]);
 			result[paramName] = decodeURIComponent(paramValue);
 		}
+
+		console.log(result);
 		
 		let params = {
      		houseid: result.houseid
     	}
 
 		const data = Object.keys(params).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key])).join('&');
+
+		const apiUrl = `${result.baseurl}/find/zip`;
+		const blobUrl = `${result.baseurl}/models/model${result.houseid}`;
 
 		fetch(apiUrl, {
 			method: 'post',
@@ -163,6 +162,22 @@
 					objLoader.setMaterials(materials);
 					objLoader.load(`${url}/${objFile}`, function (object){
 						scene.add(object);
+
+						let params = {
+							houseid: result.houseid
+						}
+
+						const data = Object.keys(params).map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key])).join('&');
+						const apiUrl = `${result.baseurl}/delete/zip`;
+						fetch(apiUrl, {
+							method: 'post',
+							mode: 'cors',
+							credentials: "include",
+							body: data,
+							headers: {
+								'Content-Type': 'application/x-www-form-urlencoded'
+							}
+						})
 					});
 				});
 			}
