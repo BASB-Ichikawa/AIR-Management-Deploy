@@ -4,11 +4,12 @@ var dbHelper = require('../utilities/dbhelper');
 exports.getCreatedHouseNumByWeek = () => {
     const query = 'SELECT DATE_FORMAT(created_at, "%w") as date, COUNT(*) as count FROM houses WHERE is_deleted = 0 AND (created_at BETWEEN ? AND ?) GROUP BY DATE_FORMAT(created_at, "%w");';
 
+    // 日曜始まりが前提
     const weekNumber = getWeekNumber(new Date(), 1);    // 第何週
-    let firstDow =  getFirstDow(new Date(), 1);         // 指定曜日の月初め
+    let firstDow = getFirstDayInWeek(new Date(), 1);    // 指定日の月初め
     firstDow.setDate(firstDow.getDate() + 7 * (weekNumber - 1));
-
-    const end = new Date();
+    
+    const end = new Date(firstDow);
     end.setDate(firstDow.getDate() + 6);
 
     const startDate = firstDow.getFullYear() + '-' + (firstDow.getMonth() + 1) + '-' +  firstDow.getDate();
@@ -51,6 +52,18 @@ function getWeekNumber(tdate, dow) {
     return weekNum;
 }
 
+function getFirstDayInWeek(tdate, dow) {
+    let firstDow = getFirstDow(tdate, dow);
+ 
+    if (tdate < firstDow) {
+        let lmdate = new Date(tdate);
+        lmdate.setMonth(lmdate.getMonth() - 1);
+        firstDow = getFirstDow(lmdate, dow);
+    }
+        
+    return firstDow;
+}
+
 function getFirstDow(tdate, dow) {
     var firstDay = new Date(tdate);
     firstDay.setDate(1); // 1日
@@ -59,5 +72,6 @@ function getFirstDow(tdate, dow) {
     while (firstDow.getDay() !== dow) {
         firstDow.setDate(firstDow.getDate() + 1);
     }
+    
     return firstDow;
 }

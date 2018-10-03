@@ -16,6 +16,8 @@ var passport = require('passport');
 var validator = require('express-validator');
 var log4js = require('log4js');
 var constants = require('./utilities/constants');
+var helmet = require('helmet');
+
 
 // 集約エラーハンドリング
 process.once('uncaughtException', (err) => {
@@ -31,6 +33,9 @@ process.once('uncaughtException', (err) => {
 
 
 var app = express();
+
+// Webアプリケーション脆弱性対策
+app.use(helmet());
 
 app.use(validator());
 
@@ -259,7 +264,7 @@ app.post('/create/house', async (req, res) => {
     const result = await house.create(req.body);
     const houseId = result.insertId;
 
-    // // 星型タグ追加
+    // 星型タグ追加
     const tagIds = req.body.tagIds.split(',');
     const stars = req.body.stars.split(',');
     let insertStarTags = [];
