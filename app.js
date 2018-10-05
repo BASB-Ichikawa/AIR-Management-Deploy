@@ -62,8 +62,9 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json());
 
-auth.init(app, passport);
-
+auth.init(app, passport).then(() => {
+    console.log('NODE_ENV: ', process.env.NODE_ENV);
+});
 
 app.use((req, res, next) => {
     if(req.hostname === 'localhost') {

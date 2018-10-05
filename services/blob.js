@@ -19,7 +19,7 @@ exports.delete = (filename, type) => {
             break;
         case 'floorImage':
             blobName = filename + '.svg';
-            containerName = constants.PLAN_IMAGE_CONTAINER_NAME;
+            containerName = constants.FLOOR_IMAGE_CONTAINER_NAME;
             break;
     }
 

@@ -197,7 +197,7 @@ exports.uploadByEdit = (file, oldData, type) => {
             break;
         case 'floorImage':
             physicalName = file.filename + '.svg';
-            containerName = constants.PLAN_IMAGE_CONTAINER_NAME;
+            containerName = constants.FLOOR_IMAGE_CONTAINER_NAME;
             oldData += '.svg';
             option = { contentSettings: {contentType: 'image/svg+xml'} };
             break;
@@ -274,7 +274,7 @@ exports.uploadByCreate = (file, type) => {
             break;
         case 'floorImage':
             physicalName = file.filename + '.svg';
-            containerName = constants.PLAN_IMAGE_CONTAINER_NAME;
+            containerName = constants.FLOOR_IMAGE_CONTAINER_NAME;
             option = { contentSettings: {contentType: 'image/svg+xml'} };
             break;
     }
@@ -360,7 +360,7 @@ exports.deleteBlob = (filename, type) => {
             break;
         case 'floorImage':
             blobName = filename + '.svg';
-            containerName = constants.PLAN_IMAGE_CONTAINER_NAME;
+            containerName = constants.FLOOR_IMAGE_CONTAINER_NAME;
             break;
     }
 
