@@ -50,7 +50,8 @@ var options = {
         if(res.req.hostname === 'localhost') {
             res.set('Access-Control-Allow-Origin', 'http://localhost:3001');
         } else {
-            res.set('Access-Control-Allow-Origin', constants.baseUrl);
+            //res.set('Access-Control-Allow-Origin', constants.baseUrl);
+            res.set('Access-Control-Allow-Origin', res.req.hostname);
         }
     }
 }
