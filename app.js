@@ -46,12 +46,11 @@ var options = {
     maxAge: '1d',
     redirect: false,
     setHeaders: function (res, path, stat) {
-        res.set('x-timestamp', Date.now());
+        res.header('x-timestamp', Date.now());
         if(res.req.hostname === 'localhost') {
-            res.set('Access-Control-Allow-Origin', 'http://localhost:3001');
+            res.header('Access-Control-Allow-Origin', 'http://localhost:3001');
         } else {
-            //res.set('Access-Control-Allow-Origin', constants.baseUrl);
-            res.set('Access-Control-Allow-Origin', res.req.hostname);
+            res.header('Access-Control-Allow-Origin', 'https://air-house-test-server-jb.azurewebsites.net, https://air-house-server-jb.azurewebsites.net, https://air-dev2-demo2.azurewebsites.net');
         }
     }
 }
@@ -71,7 +70,7 @@ app.use((req, res, next) => {
     if(req.hostname === 'localhost') {
         res.header('Access-Control-Allow-Origin', 'http://localhost:3001');
     } else {
-        res.header('Access-Control-Allow-Origin', constants.baseUrl);
+        res.header('Access-Control-Allow-Origin', 'https://air-house-test-server-jb.azurewebsites.net, https://air-house-server-jb.azurewebsites.net, https://air-dev2-demo2.azurewebsites.net');
     }
     
     res.header('Access-Control-Allow-Credentials', 'true'),
