@@ -1,9 +1,6 @@
 var azure = require('azure-storage');
 var constants = require('./constants');
 
-//var accessKey = 'qzkFDaotL9SPh8dkCiL+AXMoCdRUzEYuoZBYm6Pw8WzpZjtUfMqsPcX8XIjR3kRvkofyj3i+LnCbG18tiEXLIw==';
-//var storageAccount = 'airdev2';
-
 const getBlobService = exports.getBlobService = function () {
     return azure.createBlobService(constants.STORAGE_ACCOUNT, constants.ACCESS_KEY);
 }

@@ -73,8 +73,8 @@ app.use((req, res, next) => {
         res.header('Access-Control-Allow-Origin', 'https://air-house-test-server-jb.azurewebsites.net, https://air-house-server-jb.azurewebsites.net, https://air-dev2-demo2.azurewebsites.net');
     }
     
-    res.header('Access-Control-Allow-Credentials', 'true'),
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.set('Access-Control-Allow-Credentials', 'true'),
+    res.set('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     next();
 });
 
