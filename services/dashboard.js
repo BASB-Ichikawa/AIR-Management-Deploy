@@ -26,9 +26,17 @@ exports.getCreatedHouseNumByMonth = () => {
     let start = new Date();
     start.setMonth(start.getMonth() - 12);
     
-    const startMonth = start.getFullYear() + '-' + (start.getMonth() + 2) + '-01';
-    // TODO 当該月の最終日にする
-    const endMonth = new Date().getFullYear() + '-' +  (new Date().getMonth() + 2) + '-01';
+    let startMonth;
+    let endMonth;
+    if(start.getMonth() > 11) {
+        startMonth = start.getFullYear() + '-' + (start.getMonth() + 2) + '-01';
+        // TODO 当該月の最終日にする (今は1/1～2/1なので1/1～1/31にする)
+        endMonth = new Date().getFullYear() + '-' +  (new Date().getMonth() + 2) + '-01';
+    } else {
+        startMonth = start.getFullYear() + '-' + (start.getMonth() + 1) + '-01';
+        // TODO 当該月の最終日にする (今は1/1～2/1なので1/1～1/31にする)
+        endMonth = new Date().getFullYear() + '-' +  (new Date().getMonth() + 1) + '-01';
+    }
 
     var sql = mysql.format(query, [startMonth, endMonth]);
     
